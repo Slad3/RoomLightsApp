@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">RoomLights</string>
+    <string name="app_name">Lights</string>
     <string name="primary_notification_channel_id">"0"</string>
     <string name="primary_notification_channel_name">Lights</string>
     <string name="primary_notification_channel_description">Description</string>
