@@ -6,15 +6,13 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.os.AsyncTask
 import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.net.HttpURLConnection
 import java.net.URL
 
 
@@ -33,39 +31,21 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun notificationSend(context: Context){
-//        val tempIntent: Intent = Intent(this, this.javaClass).apply {
-//            action = Intent.ACTION_SEND
-//
-//        }
-        val intentAction = Intent(context, ActionReceiver::class.java)
+
+        val intentAction = Intent(context, ActionReceiver::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
 
         intentAction.putExtra("action", "actionName")
 
-
         val replyActionPendingIntent = PendingIntent.getBroadcast(context, 0, intentAction, 0);
 
-
         val notificationBuilder =
-//            NotificationCompat.Builder(context)
-//                .setSmallIcon(R.drawable.iyiuy71z)
-//                .setContentTitle("Lights")
-//                .setContentText("Description")
-////                .setStyle(NotificationCompat.BigTextStyle().bigText("Big Text"))
-////                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-//                .addAction(R.drawable.iyiuy71z, "Previous", replyActionPendingIntent)
-//                .setOngoing(true)
-////                .setStyle(
-////                    androidx.media.app.NotificationCompat.MediaStyle()
-//////                        .setShowActionsInCompactView(0)
-////                )
             NotificationCompat.Builder(context, getString(R.string.primary_notification_channel_id))
                 .setSmallIcon(R.drawable.iyiuy71z)
                 .setContentTitle("Lights")
                 .setContentText("Description")
                 .setStyle(NotificationCompat.BigTextStyle().bigText("Big Text"))
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                .setContentIntent(replyActionPendingIntent)
-                .setAutoCancel(false)
                 .addAction(R.drawable.iyiuy71z, "Previous", replyActionPendingIntent)
                 .setOngoing(true)
 //                .setStyle(
@@ -103,23 +83,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun request(extension: String){
-        val url = URL("https://benbarcaskey.com/")
-
-        url.readText()
-
-//        val conn = url.openConnection() as HttpURLConnection
-//        conn.requestMethod = "GET"
-//
-//        BufferedReader(
-//            InputStreamReader(conn.inputStream)
-//        ).use { reader ->
-//            var line: String?
-//            while (reader.readLine().also { line = it } != null) {
-//                println(line)
-//            }
-//        }
-
-
+        val tempHttp = RetrieveFeedTask().execute()
     }
 
     class ActionReceiver : BroadcastReceiver() {
@@ -129,7 +93,7 @@ class MainActivity : AppCompatActivity() {
         ) {
 
             println("here")
-            Toast.makeText(context,"recieved", Toast.LENGTH_LONG).show();
+            Toast.makeText(context,"received", Toast.LENGTH_LONG).show();
             val action = intent.getStringExtra("action")
             if (action == "action1") {
                 performAction1()
@@ -145,7 +109,6 @@ class MainActivity : AppCompatActivity() {
         }
 
         fun performAction1() {
-
             println("action 1")
         }
         fun performAction2() {
@@ -156,5 +119,19 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    internal class RetrieveFeedTask :
+        AsyncTask<String?, Void?, Void?>() {
+        private var exception: Exception? = null
+
+        override fun doInBackground(vararg p0: String?): Void? {
+
+            println("here")
+
+            val url = URL("https://benbarcaskey.com")
+            println(url.readText())
+            return null
+        }
+
+    }
 }
 
