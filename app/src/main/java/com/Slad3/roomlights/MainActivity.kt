@@ -34,7 +34,6 @@ class MainActivity : AppCompatActivity() {
 
 
 
-
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
@@ -82,7 +81,7 @@ class MainActivity : AppCompatActivity() {
 
 
         val notificationBuilder = NotificationCompat.Builder(context, getString(R.string.primary_notification_channel_id))
-                .setSmallIcon(R.drawable.light)
+                .setSmallIcon(R.drawable.lightbaw)
                 .setContentTitle("Lights")
 //                .setContentText("Description")
                 .addAction(R.drawable.light, "On 1", actionIntentOn1)
