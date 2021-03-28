@@ -1,5 +1,10 @@
 package com.Slad3.roomlights
 
+import android.R.id.input
+import android.R.id.message
+import android.annotation.SuppressLint
+import android.app.Notification
+import android.app.Notification.*
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -9,6 +14,9 @@ import android.content.Intent
 import android.os.AsyncTask
 import android.os.Build
 import android.os.Bundle
+import android.widget.Button
+import android.widget.EditText
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationCompat
@@ -18,51 +26,87 @@ import java.net.URL
 
 class MainActivity : AppCompatActivity() {
 
+    companion object {
+        lateinit var ipAddress: String
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
+
+
+
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        request("")
+
+        val ipText: EditText = findViewById(R.id.ipText)
+        val submitButton: Button = findViewById(R.id.submitButton)
+
+        submitButton.setOnClickListener {
+
+            println(ipText.text.toString())
+            ipAddress = ipText.text.toString()
+        }
 
         createNotificationChannel()
         notificationSend(this.applicationContext)
 
     }
 
+    @SuppressLint("WrongConstant")
     private fun notificationSend(context: Context){
 
-        val intentAction = Intent(context, ActionReceiver::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        val broadcastIntentOn1 = Intent(this, MyBroadcastReceiver::class.java).apply{
+            putExtra("full", "on1")
         }
+        val actionIntentOn1 = PendingIntent.getBroadcast(this,0, broadcastIntentOn1, 0)
 
-        intentAction.putExtra("action", "actionName")
+       val broadcastIntentOff1 = Intent(this, MyBroadcastReceiver::class.java).apply{
+           putExtra("full", "off1")
+       }
+        val actionIntentOff1 = PendingIntent.getBroadcast(this,1, broadcastIntentOff1, 0)
 
-        val replyActionPendingIntent = PendingIntent.getBroadcast(context, 0, intentAction, 0);
+//       val broadcastIntentOn2 = Intent(this, MyBroadcastReceiver::class.java).apply{
+//           putExtra("full", "on2")
+//       }
+//        val actionIntentOn2 = PendingIntent.getBroadcast(this,0, broadcastIntentOn2, 0)
+//
+//
+//
+//       val broadcastIntentOff2 = Intent(this, MyBroadcastReceiver::class.java).apply{
+//           putExtra("full", "off2")
+//       }
+//        val actionIntentOff2 = PendingIntent.getBroadcast(this, 0, broadcastIntentOff2, 0)
+//
 
-        val notificationBuilder =
-            NotificationCompat.Builder(context, getString(R.string.primary_notification_channel_id))
-                .setSmallIcon(R.drawable.iyiuy71z)
+
+
+        val notificationBuilder = NotificationCompat.Builder(context, getString(R.string.primary_notification_channel_id))
+                .setSmallIcon(R.drawable.light)
                 .setContentTitle("Lights")
-                .setContentText("Description")
-                .setStyle(NotificationCompat.BigTextStyle().bigText("Big Text"))
-                .addAction(R.drawable.iyiuy71z, "Previous", replyActionPendingIntent)
+//                .setContentText("Description")
+                .addAction(R.drawable.light, "On 1", actionIntentOn1)
+                .addAction(R.drawable.light, "Off 1", actionIntentOff1)
+
+                .setOnlyAlertOnce(true)
+                .setAutoCancel(false)
                 .setOngoing(true)
+                .setVisibility(-1)
+
+                .setStyle(NotificationCompat.BigTextStyle().bigText("Big Text"))
 //                .setStyle(
 //                    androidx.media.app.NotificationCompat.MediaStyle()
-////                        .setShowActionsInCompactView(0)
+//                        .setShowActionsInCompactView(0, 1)
+//                        .setMediaSession(null)
+//
 //                )
 
-
                 with(NotificationManagerCompat.from(this)) {
-                    notify(0, notificationBuilder!!.build())
+                    notify(0, notificationBuilder.build())
                 }
     }
 
-
     private fun createNotificationChannel() {
-        // Create the NotificationChannel, but only on API 26+ because
-        // the NotificationChannel class is new and not in the support library
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val name = getString(R.string.primary_notification_channel_name)
             val descriptionText = getString(R.string.primary_notification_channel_description)
@@ -75,60 +119,56 @@ class MainActivity : AppCompatActivity() {
             ).apply {
                 description = descriptionText
             }
-            // Register the channel with the system
             val notificationManager: NotificationManager =
                     getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(channel)
         }
     }
 
-    private fun request(extension: String){
-        val tempHttp = RetrieveFeedTask().execute()
+    public fun request(extension: String){
+        val tempHttp = RetrieveHttpTask(extension).execute()
     }
 
-    class ActionReceiver : BroadcastReceiver() {
+    public fun getIPAddress(): String { return ipAddress}
+
+    class MyBroadcastReceiver : BroadcastReceiver() {
+
+        fun request(extension: String){
+            val tempHttp = RetrieveHttpTask( extension).execute()
+        }
+
         override fun onReceive(
             context: Context,
             intent: Intent
         ) {
 
-            println("here")
-            Toast.makeText(context,"received", Toast.LENGTH_LONG).show();
-            val action = intent.getStringExtra("action")
-            if (action == "action1") {
-                performAction1()
-            } else if (action == "action2") {
-                performAction2()
-            }
-            else{
-                performDefaultAction()
-            }
+
+            val action: String? = intent.getStringExtra("action")
+            val port: String? = intent.getStringExtra("port")
+            println("Action:\t" + action + "\t" + port)
+            println(intent.getStringExtra("full"))
+            this.request(intent.getStringExtra("full"))
+
+
             //This is used to close the notification tray
-            val it = Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS)
-            context.sendBroadcast(it)
+//            val it = Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS)
+//            context.sendBroadcast(it)
         }
 
-        fun performAction1() {
-            println("action 1")
-        }
-        fun performAction2() {
-            println("action 2")
-        }
-        fun performDefaultAction() {
-            println("default action")
-        }
     }
 
-    internal class RetrieveFeedTask :
-        AsyncTask<String?, Void?, Void?>() {
+
+    internal class RetrieveHttpTask(input: String) :
+            AsyncTask<String?, Void?, Void?>() {
         private var exception: Exception? = null
 
+        var task: String = input
+
         override fun doInBackground(vararg p0: String?): Void? {
-
-            println("here")
-
-            val url = URL("https://benbarcaskey.com")
-            println(url.readText())
+            val endUrl = MainActivity.ipAddress + task
+            println(endUrl)
+            val url = URL(endUrl)
+            url.readText()
             return null
         }
 
